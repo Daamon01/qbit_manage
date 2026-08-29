@@ -847,6 +847,17 @@ class Config:
                     do_print=False,
                     save=False,
                 )
+                self.share_limits[group]["max_inactive_seeding_time"] = self.util.check_for_attribute(
+                    self.data,
+                    "max_inactive_seeding_time",
+                    parent="share_limits",
+                    subparent=group,
+                    var_type="time_parse",
+                    min_int=-2,
+                    default=-2,
+                    do_print=False,
+                    save=False,
+                )
                 self.share_limits[group]["max_last_active"] = self.util.check_for_attribute(
                     self.data,
                     "max_last_active",

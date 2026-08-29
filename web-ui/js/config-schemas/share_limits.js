@@ -76,6 +76,12 @@ export const shareLimitsSchema = {
                     description: 'The maximum seeding time before a torrent is paused. Use -2 for the global limit and -1 for no limit. (e.g., "30d", "1w4d2h").',
                     default: '-1'
                 },
+                max_inactive_seeding_time: {
+                    type: 'text',
+                    label: 'Maximum Inactive Seeding Time',
+                    description: 'Sets qBittorrent\'s native inactive seeding time limit — the torrent is stopped once it has been inactive for this long. Use -2 for the global limit and -1 for no limit. (e.g., "30d", "1w4d2h").',
+                    default: '-2'
+                },
                 max_last_active: {
                     type: 'text',
                     label: 'Maximum Last Active',
@@ -178,7 +184,7 @@ export const shareLimitsSchema = {
             },
             {
                 title: 'Share Limits',
-                fields: ['max_ratio', 'max_seeding_time', 'max_last_active', 'min_seeding_time', 'min_last_active', 'min_num_seeds']
+                fields: ['max_ratio', 'max_seeding_time', 'max_inactive_seeding_time', 'max_last_active', 'min_seeding_time', 'min_last_active', 'min_num_seeds']
             },
             {
                 title: 'Size Filters',
@@ -205,6 +211,7 @@ export const shareLimitsSchema = {
             'priority': '<span class="material-icons">priority_high</span>',
             'max_ratio': '<span class="material-icons">share</span>',
             'max_seeding_time': '<span class="material-icons">schedule</span>',
+            'max_inactive_seeding_time': '<span class="material-icons">hourglass_empty</span>',
             'min_seeding_time': '<span class="material-icons">timer</span>',
             'limit_upload_speed': '<span class="material-icons">upload</span>',
             'upload_speed_on_limit_reached': '<span class="material-icons">speed</span>',

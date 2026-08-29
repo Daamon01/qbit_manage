@@ -85,6 +85,40 @@ def test_torrent_already_correctly_tagged_is_skipped(share_limits_factory, torre
     assert t.name not in sl.torrents_updated
 
 
+def test_inactive_seeding_time_change_triggers_update(share_limits_factory, torrent_factory, group_config_factory):
+    """A torrent matching every limit except the group's max_inactive_seeding_time
+    must still be updated, and the configured value forwarded to qBittorrent."""
+    group_cfg = group_config_factory(
+        priority=1.0,
+        max_ratio=5.0,
+        max_seeding_time=43200,
+        max_inactive_seeding_time=10080,
+        limit_upload_speed=-1,
+    )
+    t = torrent_factory(
+        hash="a" * 40,
+        tags="~share_limit_1.0.noHL",
+        ratio_limit=5.0,
+        seeding_time_limit=43200,
+        inactive_seeding_time_limit=-2,
+        up_limit=0,
+        ratio=0.1,
+        seeding_time=10,
+    )
+    group_cfg["torrents"] = [t]
+    sl = share_limits_factory(
+        torrents=[t],
+        share_limits_config=OrderedDict([("noHL", group_cfg)]),
+    )
+
+    sl.update_share_limits_for_group("noHL", group_cfg, [t])
+
+    calls = _calls_of(t, "set_share_limits")
+    assert calls, "set_share_limits should be called when inactive seeding time differs"
+    assert calls[0][1]["inactive_seeding_time_limit"] == 10080
+    assert t.name in sl.torrents_updated
+
+
 def test_add_group_to_tag_false_skips_tagging(share_limits_factory, torrent_factory, group_config_factory):
     group_cfg = group_config_factory(
         priority=1.0,

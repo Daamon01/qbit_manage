@@ -141,6 +141,7 @@ class FakeTorrent:
         "tracker": "http://tracker1.example/announce",
         "ratio_limit": -2.0,
         "seeding_time_limit": -2,
+        "inactive_seeding_time_limit": -2,
         "availability": -1.0,
         "f_l_piece_prio": False,
     }
@@ -638,6 +639,7 @@ def make_group_config(**overrides):
         "cleanup": False,
         "max_ratio": -1.0,
         "max_seeding_time": -1,
+        "max_inactive_seeding_time": -2,
         "max_last_active": -1,
         "min_seeding_time": 0,
         "limit_upload_speed": 0,

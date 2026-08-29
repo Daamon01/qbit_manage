@@ -228,6 +228,12 @@ share_limits:
     # 32m, 2h32m, 3d2h32m, 1w3d2h32m
     # Will default to -1 (no limit) if not specified for the group. (Max value of 1 year (525600 minutes))
     max_seeding_time: 90d
+    # <OPTIONAL> max_inactive_seeding_time <str>: Will set qBittorrent's native inactive seeding time limit (minutes).
+    # Torrent is stopped from seeding/uploading once it has been inactive (no upload/download activity) for this long.
+    # See Some examples of valid time expressions (https://github.com/onegreyonewhite/pytimeparse2)
+    # 32m, 2h32m, 3d2h32m, 1w3d2h32m
+    # Will default to -2 (use the global limit) if not specified for the group. Use -1 for no limit.
+    max_inactive_seeding_time: -2
     # <OPTIONAL> max_last_active <str>: Will delete the torrent if cleanup variable is set and if torrent has been inactive longer than x minutes.
     # See Some examples of valid time expressions (https://github.com/onegreyonewhite/pytimeparse2)
     # 32m, 2h32m, 3d2h32m, 1w3d2h32m

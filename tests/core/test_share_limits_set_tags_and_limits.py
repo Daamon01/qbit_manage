@@ -32,6 +32,24 @@ def test_global_limit_uses_minus_two(share_limits_factory, torrent_factory):
     call_kwargs = _calls_of(t, "set_share_limits")[0][1]
     assert call_kwargs["ratio_limit"] == -2
     assert call_kwargs["seeding_time_limit"] == -2
+    assert call_kwargs["inactive_seeding_time_limit"] == -2
+
+
+def test_inactive_seeding_time_passed_through(share_limits_factory, torrent_factory):
+    sl = share_limits_factory()
+    t = torrent_factory()
+    body = sl.set_limits(t, max_ratio=-1, max_seeding_time=-1, max_inactive_seeding_time=10080)
+    call_kwargs = _calls_of(t, "set_share_limits")[0][1]
+    assert call_kwargs["inactive_seeding_time_limit"] == 10080
+    assert any("Max Inactive Seed Time" in line for line in body)
+
+
+def test_inactive_seeding_time_none_maps_to_global(share_limits_factory, torrent_factory):
+    sl = share_limits_factory()
+    t = torrent_factory()
+    sl.set_limits(t, max_ratio=-1, max_seeding_time=-1, max_inactive_seeding_time=None)
+    call_kwargs = _calls_of(t, "set_share_limits")[0][1]
+    assert call_kwargs["inactive_seeding_time_limit"] == -2
 
 
 def test_hard_ratio_limit_applied(share_limits_factory, torrent_factory):

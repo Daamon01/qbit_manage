@@ -216,6 +216,9 @@ class ShareLimits:
             tracker = self.qbt.get_tags(self.qbt.get_tracker_urls(torrent.trackers))
             check_max_ratio = group_config["max_ratio"] != torrent.ratio_limit
             check_max_seeding_time = group_config["max_seeding_time"] != torrent.seeding_time_limit
+            check_max_inactive_seeding_time = (
+                group_config.get("max_inactive_seeding_time", -2) != torrent.inactive_seeding_time_limit
+            )
             # Treat upload limit as -1 if it is set to 0 (unlimited)
             torrent_upload_limit = -1 if round(torrent.up_limit / 1024) == 0 else round(torrent.up_limit / 1024)
             if group_config["limit_upload_speed"] <= 0:
@@ -297,6 +300,7 @@ class ShareLimits:
             if self._should_update_torrent(
                 check_max_ratio,
                 check_max_seeding_time,
+                check_max_inactive_seeding_time,
                 check_limit_upload_speed,
                 share_limits_not_yet_tagged,
                 check_multiple_share_limits_tag,
@@ -340,6 +344,8 @@ class ShareLimits:
             f"    Max Ratio (config vs torrent): {group_config['max_ratio']} vs {torrent.ratio_limit} "
             f"-> check_max_ratio={check_max_ratio}\n"
             f"    Max Seeding Time (config vs torrent limit, minutes): {max_seed} vs {torrent.seeding_time_limit}\n"
+            f"    Max Inactive Seeding Time (config vs torrent limit, minutes): "
+            f"{group_config.get('max_inactive_seeding_time', -2)} vs {torrent.inactive_seeding_time_limit}\n"
             f"    Max Seeding Time (config vs current, minutes): {max_seed} vs {torrent.seeding_time / 60} "
             f"[{timedelta(minutes=max_seed)} vs {timedelta(seconds=torrent.seeding_time)}]\n"
             f"    Min Seeding Time (config vs current, minutes): {min_seed} vs {torrent.seeding_time / 60} "
@@ -358,6 +364,7 @@ class ShareLimits:
         self,
         check_max_ratio,
         check_max_seeding_time,
+        check_max_inactive_seeding_time,
         check_limit_upload_speed,
         share_limits_not_yet_tagged,
         check_multiple_share_limits_tag,
@@ -381,6 +388,7 @@ class ShareLimits:
         needs_update = (
             check_max_ratio
             or check_max_seeding_time
+            or check_max_inactive_seeding_time
             or check_limit_upload_speed
             or share_limits_not_yet_tagged
             or check_multiple_share_limits_tag
@@ -450,6 +458,7 @@ class ShareLimits:
                         torrent=torrent,
                         max_ratio=group_config["max_ratio"],
                         max_seeding_time=group_config["max_seeding_time"],
+                        max_inactive_seeding_time=group_config.get("max_inactive_seeding_time", -2),
                         limit_upload_speed=group_config["limit_upload_speed"],
                         share_limit_action=group_config.get("share_limit_action", "Default"),
                     )
@@ -492,6 +501,7 @@ class ShareLimits:
                 torrent=torrent,
                 max_ratio=group_config["max_ratio"],
                 max_seeding_time=group_config["max_seeding_time"],
+                max_inactive_seeding_time=group_config.get("max_inactive_seeding_time", -2),
                 limit_upload_speed=group_config["limit_upload_speed"],
                 share_limit_action=group_config.get("share_limit_action", "Default"),
             )
@@ -621,6 +631,7 @@ class ShareLimits:
         torrent,
         max_ratio,
         max_seeding_time,
+        max_inactive_seeding_time=-2,
         limit_upload_speed=None,
         share_limit_action="Default",
         do_print=True,
@@ -650,12 +661,23 @@ class ShareLimits:
                         f"Share Limit: Max Ratio = {max_ratio}, Max Seed Time = {str(timedelta(minutes=max_seeding_time))}", 4
                     )
                     body.append(msg)
+        if max_inactive_seeding_time is not None and max_inactive_seeding_time != torrent.inactive_seeding_time_limit:
+            if max_inactive_seeding_time >= 0:
+                msg = logger.insert_space(
+                    f"Share Limit: Max Inactive Seed Time = {str(timedelta(minutes=max_inactive_seeding_time))}", 4
+                )
+                body.append(msg)
+            elif max_inactive_seeding_time == -1:
+                msg = logger.insert_space("Share Limit: Max Inactive Seed Time = No Limit", 4)
+                body.append(msg)
         # Update Torrents
         if not self.config.dry_run:
             if max_ratio is None:
                 max_ratio = torrent.ratio_limit
             if max_seeding_time is None:
                 max_seeding_time = torrent.seeding_time_limit
+            if max_inactive_seeding_time is None:
+                max_inactive_seeding_time = -2
             # Skip setting share limits and upload speed when exclusion tags are present.
             # Upload speed is managed by _add_tag_and_reset_limits based on reset_upload_speed_on_unmet_minimums.
             if is_tag_in_torrent(self.min_seeding_time_tag, torrent.tags):
@@ -673,7 +695,7 @@ class ShareLimits:
             torrent.set_share_limits(
                 ratio_limit=max_ratio,
                 seeding_time_limit=max_seeding_time,
-                inactive_seeding_time_limit=-2,
+                inactive_seeding_time_limit=max_inactive_seeding_time,
                 share_limit_action=share_limit_action,
             )
         [logger.print_line(msg, self.config.loglevel) for msg in body if do_print]
