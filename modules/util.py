@@ -895,6 +895,12 @@ class Failed(Exception):
     pass
 
 
+class InvalidCategoryConfig(Failed):
+    """Exception raised when the cat: section of the config holds an invalid entry."""
+
+    pass
+
+
 class UnsupportedVersion(Failed):
     """Exception raised when the qBittorrent version is outside the supported range."""
 
@@ -1030,8 +1036,7 @@ def copy_files(src, dest):
 def _move_file_operation(src, dest, mod):
     """Internal function for move operation."""
     if mod is True:
-        mod_time = time.time()
-        os.utime(src, (mod_time, mod_time))
+        os.utime(src, None)
     shutil.move(src, dest)
     return True
 
